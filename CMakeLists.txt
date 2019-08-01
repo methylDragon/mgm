@@ -1,7 +1,7 @@
 #Copyright 2014, Gabriele Facciolo <facciolo@cmla.ens-cachan.fr> 
 cmake_minimum_required(VERSION 2.8)
 project(mgm)
-
+find_package(catkin REQUIRED)
 
 ## SETUP ##
 
@@ -46,9 +46,14 @@ include_directories(
   include/mgm
   include
   src/impl
+  ${catkin_INCLUDE_DIRS}
 )
 
-
+# Specify export settings
+catkin_package(
+  INCLUDE_DIRS include src/impl extern/iio
+  LIBRARIES mgm iio
+)
 
 add_library(mgm
   src/impl/img.cc
@@ -71,3 +76,6 @@ target_link_libraries(run_mgm_multi ${LIBS} mgm)
 
 add_executable(run_mgm src/main_mgm.cc)
 target_link_libraries(run_mgm ${LIBS} mgm)
+
+install(DIRECTORY include/${PROJECT_NAME} src/impl extern/iio
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
