@@ -1,7 +1,6 @@
 #Copyright 2014, Gabriele Facciolo <facciolo@cmla.ens-cachan.fr> 
 cmake_minimum_required(VERSION 2.8)
 project(mgm)
-find_package(catkin REQUIRED)
 
 ## SETUP ##
 
@@ -23,7 +22,7 @@ SET( LIBS ${LIBS} IIOLIB)
 
 FIND_PACKAGE( OpenMP )
 if(OPENMP_FOUND)
-   message("OPENMP FOUND")
+   message("[OPENMP FOUND]")
    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
@@ -40,19 +39,31 @@ else ()
 endif ()
 
 
+# Build as ROS package also, if possible
+find_package(catkin QUIET)
+if (catkin_FOUND)
+  message("[CATKIN FOUND] Configuring for ROS library compatible compilation!")
+  include_directories(
+    ${catkin_INCLUDE_DIRS}
+  )
+
+  # Specify export settings
+  catkin_package(
+    INCLUDE_DIRS include src/impl extern/iio
+    LIBRARIES mgm iio
+  )
+else()
+  message("[CATKIN NOT FOUND] Skipping ROS relevant compile steps...")
+  message("(This is ok if you're not using MGM for ROS!)")
+endif()
+
 # INCLUDES AND COMPILATION ##
+
 # Specify build include directories
 include_directories(
   include/mgm
   include
   src/impl
-  ${catkin_INCLUDE_DIRS}
-)
-
-# Specify export settings
-catkin_package(
-  INCLUDE_DIRS include src/impl extern/iio
-  LIBRARIES mgm iio
 )
 
 add_library(mgm
@@ -77,5 +88,7 @@ target_link_libraries(run_mgm_multi ${LIBS} mgm)
 add_executable(run_mgm src/main_mgm.cc)
 target_link_libraries(run_mgm ${LIBS} mgm)
 
-install(DIRECTORY include/${PROJECT_NAME} src/impl extern/iio
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+if (catkin_FOUND)
+  install(DIRECTORY include/${PROJECT_NAME} src/impl extern/iio
+    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+endif()
